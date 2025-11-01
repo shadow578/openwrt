@@ -184,6 +184,34 @@ define Device/fsl_ls1043a-rdb-sdboot
 endef
 TARGET_DEVICES += fsl_ls1043a-rdb-sdboot
 
+define Device/fsl_ls1043a-wgt40
+  $(Device/fix-sysupgrade)
+  DEVICE_VENDOR := Watchguard
+  DEVICE_MODEL := Firebox
+  DEVICE_VARIANT := T40
+  DEVICE_DTS := freescale/fsl-ls1043a-wgt40
+  DEVICE_DTS_DIR := $(LINUX_DIR)/arch/arm64/boot/dts
+  DEVICE_PACKAGES += \
+    layerscape-fman \
+    uboot-envtools \
+    fmc fmc-eth-config \
+    kmod-ahci-qoriq \
+    kmod-rtc-s35390a \
+    kmod-tpm-i2c-atmel
+
+  KERNEL_NAME := Image
+  KERNEL_SUFFIX := -kernel.itb
+  KERNEL_INSTALL := 1
+  FDT_LOADADDR := 0x90000000
+  KERNEL := kernel-bin | gzip | fit gzip $$(DEVICE_DTS_DIR)/$$(DEVICE_DTS).dtb
+  KERNEL_INITRAMFS := kernel-bin | gzip | fit gzip $$(DEVICE_DTS_DIR)/$$(DEVICE_DTS).dtb
+  IMAGES := root sysupgrade.bin
+  IMAGE/root := append-rootfs
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  SUPPORTED_DEVICES = watchguard,firebox-t40
+endef
+TARGET_DEVICES += fsl_ls1043a-wgt40
+
 define Device/fsl_ls1046a-frwy
   DEVICE_VENDOR := NXP
   DEVICE_MODEL := FRWY-LS1046A

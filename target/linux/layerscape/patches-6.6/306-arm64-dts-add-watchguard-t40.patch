@@ -1,0 +1,20 @@
+From 38093ebbf25eb60a1aa863f46118a68a0300c56e Mon Sep 17 00:00:00 2001
+From: Chris <52449218+shadow578@users.noreply.github.com>
+Date: Fri, 31 Oct 2025 17:53:00 +0200
+Subject: [PATCH] arm64: dts: freescale: ls1043a: add support for WatchGuard Firebox T40
+
+Signed-off-by: Chris <52449218+shadow578@users.noreply.github.com>
+---
+ arch/arm64/boot/dts/freescale/Makefile | 1 +
+ 1 file changed, 1 insertions(+), 0 deletions(-)
+
+--- a/arch/arm64/boot/dts/freescale/Makefile
++++ b/arch/arm64/boot/dts/freescale/Makefile
+@@ -16,6 +16,7 @@ dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls1028a-qds.dtb
+ dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls1028a-rdb.dtb
+ dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls1043a-qds.dtb
+ dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls1043a-rdb.dtb
++dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls1043a-wgt40.dtb
+ dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls1046a-frwy.dtb
+ dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls1046a-qds.dtb
+ dtb-$(CONFIG_ARCH_LAYERSCAPE) += fsl-ls1046a-rdb.dtb

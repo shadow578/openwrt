@@ -1,0 +1,267 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+// https://github.com/neggles/openwrt/commit/0e2ba8ef96acc7a6c7fcb57319e89563decea333#diff-73fafdd684ce62f3c48c572d7966775d7a9ef262213ecfea4bd6b75c58bc678c
+
+/dts-v1/;
+#include "fsl-ls1043a.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/net/qca-ar803x.h>
+
+/ {
+	model = "WatchGuard FireBox T20/T40";
+	compatible = "watchguard,firebox-t20", "watchguard,firebox-t40",
+		     "fsl,ls1043a-rdb", "fsl,ls1043a";
+
+	aliases {
+		crypto = &crypto;
+		serial0 = &duart0;
+		serial1 = &duart1;
+		serial2 = &duart2;
+		serial3 = &duart3;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+};
+
+&i2c0 {
+	status = "okay";
+	scl-gpios = <&gpio4 12 0>;
+
+	tpm@29 {
+		reg = <0x29>;
+		label = "tpm";
+		compatible = "atmel,at97sc3204t";
+	};
+
+	rtc@30 {
+		reg = <0x30>;
+		compatible = "sii,s35390a";
+	};
+
+	eeprom@50 {
+		reg = <0x50>;
+		compatible = "atmel,24c02";
+		pagesize = <1>;
+	};
+};
+
+&qspi {
+	status = "okay";
+	bus-num = <0>;
+	big-endian;
+
+	qflash0: flash@0 {
+		compatible = "mxic,mx25u3235f", "jedec,spi-nor";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		spi-max-frequency = <50000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+		reg = <0>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				reg = <0x00 0x100000>;
+				label = "rcw+pbi";
+				read-only;
+			};
+
+			partition@100000 {
+				reg = <0x100000 0x100000>;
+				label = "u-boot";
+				read-only;
+			};
+
+			partition@200000 {
+				reg = <0x200000 0x10000>;
+				label = "u-boot-env";
+			};
+
+			partition@210000 {
+				reg = <0x210000 0x10000>;
+				label = "empty-1";
+				read-only;
+			};
+
+			partition@220000 {
+				reg = <0x220000 0x20000>;
+				label = "fman ucode";
+				read-only;
+			};
+
+			partition@240000 {
+				reg = <0x240000 0x40000>;
+				label = "empty-2-ppa";
+				read-only;
+			};
+
+			partition@280000 {
+				reg = <0x280000 0x20000>;
+				label = "wg-cfg0";
+				read-only;
+			};
+
+			partition@2a0000 {
+				reg = <0x2a0000 0x20000>;
+				label = "wg-cfg1";
+				read-only;
+			};
+
+			partition@2c0000 {
+				reg = <0x2c0000 0x20000>;
+				label = "wg-mfg";
+				read-only;
+			};
+
+			partition@2e0000 {
+				reg = <0x2e0000 0x20000>;
+				label = "empty-3";
+				read-only;
+			};
+
+			partition@300000 {
+				reg = <0x300000 0x20000>;
+				label = "fman-ucode-old";
+				read-only;
+			};
+
+			partition@320000 {
+				reg = <0x320000 0xe0000>;
+				label = "wg-bootopt";
+				read-only;
+			};
+		};
+	};
+};
+
+&duart0 {
+	status = "okay";
+};
+
+&duart1 {
+	status = "okay";
+};
+
+&usb0 {
+	status = "okay";
+	snps,dis-u1u2-when-u3-quirk;
+	snps,host-vbus-glitches;
+};
+
+&usb1 {
+	status = "okay";
+	snps,dis-u1u2-when-u3-quirk;
+	snps,host-vbus-glitches;
+};
+
+&usb2 {
+	status = "okay";
+	snps,dis-u1u2-when-u3-quirk;
+	snps,host-vbus-glitches;
+};
+
+#include "fsl-ls1043-post.dtsi"
+
+&fman0 {
+	ethernet@e0000 { /* LAN1 */
+		phy-handle = <&lan1_phy>;
+		phy-connection-type = "qsgmii";
+	};
+
+	ethernet@e2000 { /* LAN2 */
+		phy-handle = <&lan2_phy>;
+		phy-connection-type = "qsgmii";
+	};
+
+	ethernet@e4000 { /* WAN */
+		phy-handle = <&wan1_phy>;
+		pcsphy-handle = <&wan1_phy>;
+		phy-connection-type = "rgmii-id";
+		phy-mode = "rgmii-id";
+	};
+
+	ethernet@e6000 {
+		status = "disabled";
+	};
+
+	ethernet@e8000 { /* LAN3 */
+		phy-handle = <&lan3_phy>;
+		phy-connection-type = "qsgmii";
+	};
+
+	ethernet@ea000 { /* LAN4 */
+		phy-handle = <&lan4_phy>;
+		phy-connection-type = "qsgmii";
+	};
+
+	ethernet@f0000 {
+		status = "disabled";
+	};
+
+	ethernet@f2000 {
+		status = "disabled";
+	};
+
+	mdio@fc000 {
+		lan1_phy: ethernet-phy@4 {
+			reg = <0x4>;
+		};
+
+		lan2_phy: ethernet-phy@5 {
+			reg = <0x5>;
+		};
+
+		lan3_phy: ethernet-phy@6 {
+			reg = <0x6>;
+		};
+
+		lan4_phy: ethernet-phy@7 {
+			reg = <0x7>;
+		};
+	};
+
+	mdio@fd000 {
+		wan1_phy: ethernet-phy@1 {
+			reg = <0x01>;
+			
+   		// AR8035 also used on fsl-ls1028a-kontron-sl28-var1.dts, refer to it too
+			// note that on T40 hw, CLK_25M is not connected
+
+			// workaround buggy EEE on early AR8035 revisions
+		  eee-broken-1000t;
+		  eee-broken-100tx;
+		};
+	};
+};
+
+&uqe {
+	ucc_hdlc: ucc@2000 {
+		compatible = "fsl,ucc-hdlc";
+		rx-clock-name = "clk8";
+		tx-clock-name = "clk9";
+		fsl,rx-sync-clock = "rsync_pin";
+		fsl,tx-sync-clock = "tsync_pin";
+		fsl,tx-timeslot-mask = <0xfffffffe>;
+		fsl,rx-timeslot-mask = <0xfffffffe>;
+		fsl,tdm-framer-type = "e1";
+		fsl,tdm-id = <0>;
+		fsl,siram-entry-id = <0>;
+		fsl,tdm-interface;
+	};
+};
+
+// WG T40 does not support secure boot, so remove OP-TEE
+// not doing this will cause kernel panic at boot
+/delete-node/ &{/firmware/optee};
+
+// for some reason, usb enumeration stops working if 
+// soc is marked dma-coherent
+&soc {
+    /delete-property/ dma-coherent;
+};
