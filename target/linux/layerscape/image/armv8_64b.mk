@@ -184,6 +184,9 @@ define Device/fsl_ls1043a-rdb-sdboot
 endef
 TARGET_DEVICES += fsl_ls1043a-rdb-sdboot
 
+
+# based on rockchip/image/Makefile and related
+
 define Build/wg-boot-common
 	# This creates a new folder copies the dtb (as rockchip.dtb) 
 	# and the kernel image (as kernel.img)
@@ -235,10 +238,11 @@ define Device/fsl_ls1043a-wgt40
 
   FILESYSTEMS = ext4
 
+  BOOT_SCRIPT = fsl-ls1043a-wgt40
+
   KERNEL = kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
-  IMAGES = sysupgrade.img.gz sdcard.image.gz
-  IMAGE/sysupgrade.img.gz = wg-boot-common | wg-img | gzip | append-metadata
-  IMAGE/sdcard.img.gz = wg-boot-common | wg-img | gzip
+  IMAGES = sysupgrade.img.gz
+  IMAGE/sysupgrade.img.gz = wg-boot-common | wg-boot-script $$(BOOT_SCRIPT) | wg-img | gzip | append-metadata
 endef
 TARGET_DEVICES += fsl_ls1043a-wgt40
 
