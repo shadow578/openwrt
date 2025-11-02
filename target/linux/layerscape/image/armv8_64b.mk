@@ -184,13 +184,45 @@ define Device/fsl_ls1043a-rdb-sdboot
 endef
 TARGET_DEVICES += fsl_ls1043a-rdb-sdboot
 
+define Build/wg-boot-common
+	# This creates a new folder copies the dtb (as rockchip.dtb) 
+	# and the kernel image (as kernel.img)
+	rm -fR $@.boot
+	mkdir -p $@.boot
+
+	$(CP) $(IMAGE_KERNEL) $@.boot/kernel.itb
+endef
+
+define Build/wg-boot-script
+	# Make an U-boot image and copy it to the boot partition
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d $(if $(1),$(1),default).bootscript $@.boot/boot.scr
+endef
+
+define Build/wg-img
+	# Creates the final SD/eMMC images, 
+	# combining boot partition, root partition as well as the u-boot bootloader
+
+	# Generate a new partition table in $@ with 32 MiB of 
+	# alignment padding for the u-boot-rockchip.bin (idbloader + u-boot) to fit:
+	# http://opensource.rock-chips.com/wiki_Boot_option#Boot_flow
+	#
+	# U-Boot SPL expects the U-Boot ITB to be located at sector 0x4000 (8 MiB) on the MMC storage
+	PADDING=1 $(SCRIPT_DIR)/gen_image_generic.sh \
+		$@ \
+		$(CONFIG_TARGET_KERNEL_PARTSIZE) $@.boot \
+		$(CONFIG_TARGET_ROOTFS_PARTSIZE) $(IMAGE_ROOTFS) \
+		32768
+
+	# Copy the u-boot-rockchip.bin to the image at sector 0x40
+	#dd if="$(STAGING_DIR_IMAGE)"/$(UBOOT_DEVICE_NAME)-u-boot-rockchip.bin of="$@" seek=64 conv=notrunc
+endef
+
+
 define Device/fsl_ls1043a-wgt40
-  $(Device/fix-sysupgrade)
   DEVICE_VENDOR := Watchguard
   DEVICE_MODEL := Firebox
   DEVICE_VARIANT := T40
-  DEVICE_DTS := freescale/fsl-ls1043a-wgt40
-  DEVICE_DTS_DIR := $(LINUX_DIR)/arch/arm64/boot/dts
+  DEVICE_DTS = fsl-ls1043a-wgt40
   DEVICE_PACKAGES += \
     layerscape-fman \
     uboot-envtools \
@@ -199,16 +231,14 @@ define Device/fsl_ls1043a-wgt40
     kmod-rtc-s35390a \
     kmod-tpm-i2c-atmel
 
-  KERNEL_NAME := Image
-  KERNEL_SUFFIX := -kernel.itb
-  KERNEL_INSTALL := 1
-  FDT_LOADADDR := 0x90000000
-  KERNEL := kernel-bin | gzip | fit gzip $$(DEVICE_DTS_DIR)/$$(DEVICE_DTS).dtb
-  KERNEL_INITRAMFS := kernel-bin | gzip | fit gzip $$(DEVICE_DTS_DIR)/$$(DEVICE_DTS).dtb
-  IMAGES := root sysupgrade.bin
-  IMAGE/root := append-rootfs
-  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   SUPPORTED_DEVICES = watchguard,firebox-t40
+
+  FILESYSTEMS = ext4
+
+  KERNEL = kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
+  IMAGES = sysupgrade.img.gz sdcard.image.gz
+  IMAGE/sysupgrade.img.gz = wg-boot-common | wg-img | gzip | append-metadata
+  IMAGE/sdcard.img.gz = wg-boot-common | wg-img | gzip
 endef
 TARGET_DEVICES += fsl_ls1043a-wgt40
 
